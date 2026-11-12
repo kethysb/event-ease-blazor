@@ -1,0 +1,76 @@
+@page "/register/{EventId:int}"
+@using EventEase.Models
+@using EventEase.Services
+@inject EventService EventService
+@inject UserSessionService SessionService
+@inject NavigationManager Nav
+
+<h3>Event Registration</h3>
+
+@if (selectedEvent is null)
+{
+    <p class="text-danger">Invalid event ID.</p>
+}
+else
+{
+    <p>Registering for: <strong>@selectedEvent.Name</strong></p>
+
+    <EditForm Model="@registration" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <InputText class="form-control" @bind-Value="registration.FullName" />
+            <ValidationMessage For="@(() => registration.FullName)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <InputText class="form-control" @bind-Value="registration.Email" />
+            <ValidationMessage For="@(() => registration.Email)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Number of Tickets</label>
+            <InputNumber class="form-control" @bind-Value="registration.Tickets" />
+            <ValidationMessage For="@(() => registration.Tickets)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Confirm Registration</button>
+    </EditForm>
+
+    @if (submitted)
+    {
+        <div class="alert alert-success mt-3">
+            Registration confirmed for @registration.FullName!
+            <a href="/attendance" class="alert-link">View Attendance Tracker</a>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public int EventId { get; set; }
+    private EventModel? selectedEvent;
+    private RegistrationModel registration = new();
+    private bool submitted = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        selectedEvent = await EventService.GetEventByIdAsync(EventId);
+        registration.EventId = EventId;
+    }
+
+    private void HandleValidSubmit()
+    {
+        EventService.IncrementRegistration(EventId, registration.Tickets);
+        SessionService.AddRegistration(new RegistrationModel
+        {
+            FullName = registration.FullName,
+            Email = registration.Email,
+            Tickets = registration.Tickets,
+            EventId = EventId
+        });
+        submitted = true;
+    }
+}

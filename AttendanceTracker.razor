@@ -1,0 +1,49 @@
+@page "/attendance"
+@using EventEase.Services
+@inject UserSessionService SessionService
+@implements IDisposable
+
+<h3>Attendance & Session Tracker</h3>
+<p>Active User: <strong>@SessionService.CurrentUserName</strong> (@(SessionService.IsAuthenticated ? SessionService.CurrentUserEmail : "Not signed in"))</p>
+
+@if (!SessionService.Registrations.Any())
+{
+    <div class="alert alert-info">No registrations recorded in this session yet. <a href="/events">Browse Events</a></div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Event ID</th>
+                <th>Attendee</th>
+                <th>Email</th>
+                <th>Tickets</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reg in SessionService.Registrations)
+            {
+                <tr @key="reg">
+                    <td>#@reg.EventId</td>
+                    <td>@reg.FullName</td>
+                    <td>@reg.Email</td>
+                    <td>@reg.Tickets</td>
+                    <td>@(reg.CheckedIn ? "Checked In" : "Pending")</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-success" @onclick="() => SessionService.ToggleCheckIn(reg)">
+                            @(reg.CheckedIn ? "Undo Check-In" : "Check In")
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    protected override void OnInitialized() => SessionService.OnSessionChanged += StateHasChanged;
+    public void Dispose() => SessionService.OnSessionChanged -= StateHasChanged;
+}

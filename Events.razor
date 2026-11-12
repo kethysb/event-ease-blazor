@@ -1,0 +1,44 @@
+@page "/"
+@page "/events"
+@using EventEase.Models
+@using EventEase.Services
+@inject EventService EventService
+@inject NavigationManager Nav
+
+<PageTitle>Events — EventEase</PageTitle>
+
+<h2>Upcoming Corporate & Tech Events</h2>
+<div class="mb-3">
+    <input class="form-control" placeholder="Filter events by name or city..." @bind="searchTerm" @bind:event="oninput" />
+</div>
+
+@if (events is null)
+{
+    <p><em>Loading events...</em></p>
+}
+else
+{
+    @foreach (var ev in FilteredEvents)
+    {
+        <EventCard @key="ev.Id" EventItem="ev" AllowQuickEdit="true" OnRegisterClicked="NavigateToRegister" />
+    }
+}
+
+@code {
+    private List<EventModel>? events;
+    private string searchTerm = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetEventsAsync();
+    }
+
+    private IEnumerable<EventModel> FilteredEvents =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? events ?? Enumerable.Empty<EventModel>()
+            : (events ?? Enumerable.Empty<EventModel>()).Where(e =>
+                e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private void NavigateToRegister(int eventId) => Nav.NavigateTo($"/register/{eventId}");
+}

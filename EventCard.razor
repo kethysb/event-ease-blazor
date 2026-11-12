@@ -1,0 +1,42 @@
+@using EventEase.Models
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">@EventItem.Name</h5>
+            <span class="badge bg-info text-dark">@EventItem.RegisteredCount / @EventItem.Capacity Seats</span>
+        </div>
+        <p class="text-muted mb-2">@EventItem.Date.ToString("MMM dd, yyyy") — @EventItem.Location</p>
+        <p class="card-text">@EventItem.Description</p>
+
+        @if (AllowQuickEdit)
+        {
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small">Event Title (Two-Way Bound)</label>
+                    <input class="form-control form-control-sm" @bind="EventItem.Name" @bind:event="oninput" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Location (Two-Way Bound)</label>
+                    <input class="form-control form-control-sm" @bind="EventItem.Location" @bind:event="oninput" />
+                </div>
+            </div>
+        }
+
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary btn-sm" href="@($"/events/{EventItem.Id}")">View Details</a>
+            <button class="btn btn-primary btn-sm" @onclick="() => OnRegisterClicked.InvokeAsync(EventItem.Id)">Register</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public EventModel EventItem { get; set; } = new();
+
+    [Parameter]
+    public bool AllowQuickEdit { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<int> OnRegisterClicked { get; set; }
+}
